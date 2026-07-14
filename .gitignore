@@ -1,0 +1,28 @@
+# OpenCode configuration (private)
+.opencode/
+
+# Binarios de Go
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Archivos de build
+*.test
+*.out
+*.prof
+
+# Dependencias de Go
+vendor/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
