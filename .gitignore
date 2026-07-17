@@ -27,3 +27,6 @@ vendor/
 # OS
 .DS_Store
 Thumbs.db
+
+# Logs
+repl.log
