@@ -1,4 +1,4 @@
-package main
+package repl
 
 import (
 	"testing"
@@ -16,14 +16,14 @@ func TestCleanInput(t *testing.T) {
 		{"Charmander Bulbasaur PIKACHU", []string{"charmander", "bulbasaur", "pikachu"}},
 	}
 	for _, tt := range tests {
-		actual := cleanInput(tt.input)
+		actual := CleanInput(tt.input)
 		if len(actual) != len(tt.expected) {
-			t.Errorf("cleanInput(%q) = %v; expected %v", tt.input, actual, tt.expected)
+			t.Errorf("CleanInput(%q) = %v; expected %v", tt.input, actual, tt.expected)
 			continue
 		}
 		for i := range actual {
 			if actual[i] != tt.expected[i] {
-				t.Errorf("cleanInput(%q) = %v; expected %v", tt.input, actual, tt.expected)
+				t.Errorf("CleanInput(%q) = %v; expected %v", tt.input, actual, tt.expected)
 				break
 			}
 		}

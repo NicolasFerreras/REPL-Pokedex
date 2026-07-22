@@ -5,6 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"os"
+
+	"github.com/NicolasFerreras/REPL-Pokedex/internal/commands"
+	"github.com/NicolasFerreras/REPL-Pokedex/internal/repl"
 )
 
 const welcomePrompt = "Welcome to the Pokedex! Please enter a command (type 'help' for assistance): "
@@ -17,14 +20,14 @@ func main() {
 		scanner.Scan()
 		input := scanner.Text()
 
-		cleanedInput := cleanInput(input)
+		cleanedInput := repl.CleanInput(input)
 
 		if len(cleanedInput) == 0 {
 			continue
 		}
 
-		err := userInput(cleanedInput[0])
-		if errors.Is(err, errExit) {
+		err := commands.UserInput(cleanedInput[0])
+		if errors.Is(err, commands.ErrExit) {
 			os.Exit(0)
 		}
 		if err != nil {

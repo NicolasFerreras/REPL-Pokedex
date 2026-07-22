@@ -1,10 +1,11 @@
-package main
+package repl
 
 import (
 	"strings"
 )
 
-func cleanInput(text string) []string {
+// CleanInput parses and normalizes user input
+func CleanInput(text string) []string {
 	lowered := strings.ToLower(text)
 	words := strings.Fields(lowered)
 
