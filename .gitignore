@@ -8,7 +8,7 @@
 *.so
 *.dylib
 REPL-Pokedex
-pokedex
+/pokedex
 
 # Archivos de build
 *.test

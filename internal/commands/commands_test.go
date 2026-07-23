@@ -7,10 +7,10 @@ import (
 
 func TestUserInput(t *testing.T) {
 	tests := []struct {
-		name      string
-		input     string
-		wantErr   bool
-		errMsg    string
+		name    string
+		input   string
+		wantErr bool
+		errMsg  string
 	}{
 		{
 			name:    "empty input returns error",
