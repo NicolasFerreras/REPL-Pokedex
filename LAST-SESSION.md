@@ -19,7 +19,7 @@ Se completó la integración con PokéAPI: comandos `map` y `mapb` con paginaci�
 - Branch `feat/integracion-pokeapi` mergeada a `main` y eliminada
 
 ## 🔄 En Progreso
-- (Ninguna)
+- 🟡 Caché en memoria para respuestas HTTP
 
 ## 📝 Próximos Pasos
 - Implementar comando `explore` (ver Pokémon en un area)
@@ -52,5 +52,4 @@ Se completó la integración con PokéAPI: comandos `map` y `mapb` con paginaci�
 3. 🔴 Implementar comando `catch`
 4. 🔴 Implementar comando `inspect`
 5. 🔴 Implementar comando `pokedex`
-6. 🟡 Sistema de caché para requests HTTP
-7. 🟡 CI/CD pipeline (GitHub Actions)
+6. 🟡 CI/CD pipeline (GitHub Actions)
