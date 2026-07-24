@@ -8,15 +8,28 @@ type CliCommand struct {
 }
 
 // Commands is defined at package level to avoid recreation on every call
-var Commands = map[string]CliCommand{
-	"exit": {
-		Name:        "exit",
-		Description: "Exit the Pokedex",
-		Callback:    CommandExit,
-	},
-	"help": {
-		Name:        "help",
-		Description: "Display help information",
-		Callback:    CommandHelp,
-	},
+
+func GetCommands() map[string]CliCommand {
+	return map[string]CliCommand{
+		"help": {
+			Name:        "help",
+			Description: "Display help information",
+			Callback:    CommandHelp,
+		},
+		"exit": {
+			Name:        "exit",
+			Description: "Exit the Pokedex",
+			Callback:    CommandExit,
+		},
+		"map": {
+			Name:        "map",
+			Description: "Display location areas",
+			Callback:    CommandMap,
+		},
+		"mapb": {
+			Name:        "mapb",
+			Description: "Display previous location areas",
+			Callback:    CommandMapBack,
+		},
+	}
 }
