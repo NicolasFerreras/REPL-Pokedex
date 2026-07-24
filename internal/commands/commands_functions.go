@@ -3,6 +3,9 @@ package commands
 import (
 	"errors"
 	"fmt"
+
+	"github.com/NicolasFerreras/REPL-Pokedex/internal/client"
+	"github.com/NicolasFerreras/REPL-Pokedex/internal/model"
 )
 
 // ErrExit is a sentinel error used to signal the REPL should exit
@@ -16,9 +19,9 @@ func CommandExit() error {
 
 // CommandHelp displays available commands
 func CommandHelp() error {
-	fmt.Println("Available commands:")
-	fmt.Println("  help - Display help information")
-	fmt.Println("  exit - Exit the Pokedex")
+	for _, cmd := range GetCommands() {
+		fmt.Printf("%s: %s\n", cmd.Name, cmd.Description)
+	}
 	return nil
 }
 
@@ -28,10 +31,52 @@ func UserInput(input string) error {
 		return fmt.Errorf("no command entered. Please enter a command")
 	}
 
-	cmd, exists := Commands[input]
+	cmd, exists := GetCommands()[input]
 	if !exists {
 		return fmt.Errorf("unknown command: %s. Type 'help' for available commands", input)
 	}
 
 	return cmd.Callback()
+}
+func CommandMap() error {
+	url := model.ConfigData.BaseURL
+	if model.ConfigData.NextURL != nil {
+		url = *model.ConfigData.NextURL
+	}
+	return fetchAndDisplay(url)
+}
+
+func CommandMapBack() error {
+	if model.ConfigData.PreviousURL == nil {
+		fmt.Println("you're on the first page")
+		return nil
+	}
+	return fetchAndDisplay(*model.ConfigData.PreviousURL)
+}
+
+func fetchAndDisplay(url string) error {
+	c := client.NewClient(url)
+	result, err := c.GetLocationArea(url)
+	if err != nil {
+		return fmt.Errorf("failed to get location area: %w", err)
+	}
+
+	// Actualizar paginación
+	if result.Next != "" {
+		model.ConfigData.NextURL = &result.Next
+	} else {
+		model.ConfigData.NextURL = nil
+	}
+
+	if result.Previous != "" {
+		model.ConfigData.PreviousURL = &result.Previous
+	} else {
+		model.ConfigData.PreviousURL = nil
+	}
+
+	fmt.Println("Location Areas:")
+	for _, r := range result.Results {
+		fmt.Printf("- %s\n", r.Name)
+	}
+	return nil
 }
