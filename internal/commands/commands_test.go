@@ -74,13 +74,13 @@ func TestCommandsMap(t *testing.T) {
 	// Verify that required commands exist
 	requiredCommands := []string{"help", "exit"}
 	for _, cmd := range requiredCommands {
-		if _, exists := Commands[cmd]; !exists {
+		if _, exists := GetCommands()[cmd]; !exists {
 			t.Errorf("required command %q not found in Commands map", cmd)
 		}
 	}
 
 	// Verify that commands have non-nil callbacks
-	for name, cmd := range Commands {
+	for name, cmd := range GetCommands() {
 		if cmd.Callback == nil {
 			t.Errorf("command %q has nil Callback", name)
 		}
