@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/NicolasFerreras/REPL-Pokedex/internal/client"
 	"github.com/NicolasFerreras/REPL-Pokedex/internal/model"
 )
 
@@ -58,16 +57,5 @@ func CommandExplore() error {
 	arg := model.ConfigData.Arg
 	url := model.ConfigData.BaseURL + arg
 
-	c := client.NewClient(url)
-	result, err := c.GetPokemon(url)
-
-	if err != nil {
-		return fmt.Errorf("failed to fetch data: %w", err)
-	}
-
-	for _, encounter := range result.PokemonEncounters {
-		fmt.Printf("- %s\n", encounter.Pokemon.Name)
-	}
-
-	return nil
+	return exploreCache(url)
 }
