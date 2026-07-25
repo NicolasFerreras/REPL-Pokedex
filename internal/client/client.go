@@ -32,7 +32,7 @@ func (c *Client) GetLocationArea(url string) (*model.LocationArea, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf(errors.ErrNon200Response, resp.StatusCode)
+		return nil, fmt.Errorf("api error: %s", errors.UserMessage(resp.StatusCode))
 	}
 
 	var locationArea model.LocationArea
@@ -52,7 +52,7 @@ func (c *Client) GetPokemon(url string) (*model.PokemonEncountersList, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf(errors.ErrNon200Response, resp.StatusCode)
+		return nil, fmt.Errorf("api error: %s", errors.UserMessage(resp.StatusCode))
 	}
 
 	var pokemonEncounters model.PokemonEncountersList
