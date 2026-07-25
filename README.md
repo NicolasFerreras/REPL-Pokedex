@@ -7,6 +7,7 @@ Pokedex interactiva en terminal construida en Go, consumiendo la [PokéAPI](http
 - REPL interactivo con loop de comandos
 - Navegación por location areas con paginación (`map` / `mapb`)
 - Cliente HTTP con timeout y manejo de errores
+- **Caché en memoria thread-safe** con expiración automática (TTL)
 - Sistema de comandos extensible con patrón callback
 - Tests unitarios con tabla-driven tests (idiomático Go)
 
@@ -36,6 +37,10 @@ REPL-Pokedex/
 │   ├── model/
 │   │   ├── endpoints.go         # Config y datos de paginación
 │   │   └── location_area.go     # Modelos de LocationArea
+│   ├── pokecache/
+│   │   ├── cache.go             # Structs + NewCache + Add + Get
+│   │   ├── cache_handler.go     # reapLoop (limpieza automática)
+│   │   └── cache_test.go        # Tests del cache
 │   └── repl/
 │       ├── repl.go              # Lógica del REPL
 │       └── repl_test.go         # Tests del REPL
@@ -70,6 +75,18 @@ Este proyecto consume la [PokéAPI](https://pokeapi.co/) — una API gratuita y 
 
 Endpoint utilizado:
 - `GET /api/v2/location-area/` — Lista de areas de ubicación con paginación
+
+## Caché (pokecache)
+
+Implementación propia de caché en memoria **thread-safe** con expiración automática:
+
+- **Almacenamiento:** `map[string]cacheEntry` protegido por `sync.Mutex`
+- **Entrada:** `cacheEntry{ createdAt time.Time, val []byte }` — JSON crudo
+- **Limpieza:** `reapLoop()` en goroutine con `time.Ticker` — elimina entradas > TTL
+- **TTL configurable:** 5 segundos por defecto
+- **Integración:** `fetchAndDisplay` usa `cache.Get/Add` — cache hit = instantáneo
+
+📖 **Documentación completa:** [`Cache-Operation.md`](Cache-Operation.md)
 
 ## Stack
 
