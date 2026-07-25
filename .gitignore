@@ -33,7 +33,7 @@ Thumbs.db
 repl.log
 *.log
 
-# Markdown docs (except README and Cache-Operation)
+# Markdown docs (except README and Cache-Docs)
 *.md
 !README.md
-!Cache-Operation.md
+!Cache-Docs.md

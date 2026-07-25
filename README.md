@@ -86,7 +86,7 @@ Implementación propia de caché en memoria **thread-safe** con expiración auto
 - **TTL configurable:** 5 segundos por defecto
 - **Integración:** `fetchAndDisplay` usa `cache.Get/Add` — cache hit = instantáneo
 
-📖 **Documentación completa:** [`Cache-Operation.md`](Cache-Operation.md)
+📖 **Documentación completa:** [`Cache-Docs.md`](Cache-Docs.md)
 
 ## Stack
 
