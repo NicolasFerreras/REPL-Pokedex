@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/NicolasFerreras/REPL-Pokedex/internal/commands"
+	"github.com/NicolasFerreras/REPL-Pokedex/internal/model"
 	"github.com/NicolasFerreras/REPL-Pokedex/internal/repl"
 )
 
@@ -25,6 +26,9 @@ func main() {
 		if len(cleanedInput) == 0 {
 			continue
 		}
+		if cleanedInput[0] == "explore" && len(cleanedInput) > 1 {
+			model.ConfigData.Arg = cleanedInput[1]
+		}
 
 		err := commands.UserInput(cleanedInput[0])
 		if errors.Is(err, commands.ErrExit) {
@@ -34,5 +38,8 @@ func main() {
 			fmt.Println(err)
 		}
 
+		if err := scanner.Err(); err != nil {
+			fmt.Println(err)
+		}
 	}
 }

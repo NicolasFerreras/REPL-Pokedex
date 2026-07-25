@@ -42,3 +42,23 @@ func (c *Client) GetLocationArea(url string) (*model.LocationArea, error) {
 
 	return &locationArea, nil
 }
+
+func (c *Client) GetPokemon(url string) (*model.PokemonEncountersList, error) {
+	resp, err := c.HTTPClient.Get(url)
+	if err != nil {
+		return nil, fmt.Errorf("failed to make GET request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("received non-200 response code: %d", resp.StatusCode)
+	}
+
+	var pokemonEncounters model.PokemonEncountersList
+	err = json.NewDecoder(resp.Body).Decode(&pokemonEncounters)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode response body: %w", err)
+	}
+
+	return &pokemonEncounters, nil
+}

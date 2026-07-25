@@ -31,5 +31,10 @@ func GetCommands() map[string]CliCommand {
 			Description: "Display previous location areas",
 			Callback:    CommandMapBack,
 		},
+		"explore": {
+			Name:        "explore",
+			Description: "Explore a specific location area",
+			Callback:    CommandExplore,
+		},
 	}
 }

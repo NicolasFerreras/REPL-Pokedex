@@ -4,6 +4,7 @@ type Config struct {
 	PreviousURL *string
 	NextURL     *string
 	BaseURL     string
+	Arg         string
 }
 
 var ConfigData = Config{
