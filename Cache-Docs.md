@@ -68,7 +68,6 @@ type cacheEntry struct {
 type Cache struct {
     data     map[string]cacheEntry  // Key: URL completa | Value: entrada
     mu       sync.Mutex             // Protege acceso concurrente al map
-    interval time.Duration          // Ventana de vida de cada entrada
 }
 ```
 
@@ -76,7 +75,8 @@ type Cache struct {
 |-------|------|-----------|
 | `data` | `map[string]cacheEntry` | Almacén clave-valor. Clave = URL absoluta de la request |
 | `mu` | `sync.Mutex` | Serializa lecturas/escrituras (Go maps no son thread-safe) |
-| `interval` | `time.Duration` | TTL efectivo: entradas > `interval` son eliminadas |
+
+> **Nota:** El campo `interval` **NO se guarda en el struct**. Se pasa como parámetro a `reapLoop()`.
 
 ---
 
@@ -87,22 +87,21 @@ type Cache struct {
 ```go
 func NewCache(interval time.Duration) *Cache {
     c := &Cache{
-        data:     make(map[string]cacheEntry),
-        interval: interval,
+        data: make(map[string]cacheEntry),
     }
-    go c.reapLoop()  // ← Goroutine background
+    go c.reapLoop(interval)  // ← Goroutine background
     return c
 }
 ```
 
 **Secuencia:**
-1. Crea map vacío y guarda `interval`
-2. Lanza `reapLoop()` en **goroutine independiente** (non-blocking)
+1. Crea map vacío
+2. Lanza `reapLoop(interval)` en **goroutine independiente** (non-blocking)
 3. Retorna `*Cache` listo para uso inmediato
 
-> **Importante:** El cache es **singleton por proceso** — se crea una vez en `commands_functions.go`:
+> **Importante:** El cache es **singleton por proceso** — se crea una vez en `pagination_handler.go`:
 > ```go
-> var cache = pokecache.NewCache(5 * time.Second)
+> var cache = pokecache.NewCache(15 * time.Second)
 > ```
 
 ---
@@ -178,18 +177,18 @@ Get("https://pokeapi.co/api/v2/location-area/?offset=20")
 
 ---
 
-### 3.4 Limpieza Automática — `reapLoop()`
+### 3.4 Limpieza Automática — `reapLoop(interval)`
 
 ```go
-func (c *Cache) reapLoop() {
-    ticker := time.NewTicker(c.interval)
+func (c *Cache) reapLoop(interval time.Duration) {
+    ticker := time.NewTicker(interval)
     defer ticker.Stop()
 
     for range ticker.C {
         c.mu.Lock()
         now := time.Now()
         for key, entry := range c.data {
-            if now.Sub(entry.createdAt) > c.interval {
+            if now.Sub(entry.createdAt) > interval {
                 delete(c.data, key)
             }
         }
@@ -198,55 +197,55 @@ func (c *Cache) reapLoop() {
 }
 ```
 
-**Diagrama de tiempo:**
+**Diagrama de tiempo (interval = 15s):**
 
 ```
-Interval = 5s
+Interval = 15s
 ──────────────────────────────────────────────────────────────▶ TIME
 
-T=0s     NewCache(5s) → reapLoop inicia
+T=0s     NewCache(15s) → reapLoop inicia
          │
 T=0.1s   Add("url-A")  createdAt=0.1s
 T=1.0s   Add("url-B")  createdAt=1.0s
          │
-T=5.0s   ▼ TICKER TIQUEA ▼
+T=15.0s  ▼ TICKER TIQUEA ▼
          reapLoop despierta
          Lock()
-         now = 5.0s
-         ├── "url-A": 5.0 - 0.1 = 4.9s  ≤ 5s  ✓ KEEP
-         └── "url-B": 5.0 - 1.0 = 4.0s  ≤ 5s  ✓ KEEP
+         now = 15.0s
+         ├── "url-A": 15.0 - 0.1 = 14.9s  ≤ 15s  ✓ KEEP
+         └── "url-B": 15.0 - 1.0 = 14.0s  ≤ 15s  ✓ KEEP
          Unlock()
          │
-T=10.0s  ▼ TICKER TIQUEA ▼
-         now = 10.0s
-         ├── "url-A": 10.0 - 0.1 = 9.9s  > 5s  ✗ DELETE
-         └── "url-B": 10.0 - 1.0 = 9.0s  > 5s  ✗ DELETE
+T=30.0s  ▼ TICKER TIQUEA ▼
+         now = 30.0s
+         ├── "url-A": 30.0 - 0.1 = 29.9s  > 15s  ✗ DELETE
+         └── "url-B": 30.0 - 1.0 = 29.0s  > 15s  ✗ DELETE
 ```
 
 **Propiedades:**
 - ✅ **No bloquea** `Add`/`Get` por más de microsegundos (lock corto)
-- ✅ **Precisión**: entradas expiran entre `interval` y `2*interval` después de crearse
-- ✅ **Limpieza graceful**: `defer ticker.Stop()` al salir (aunque la goroutine es infinita)
+- ✅ **Precisión**: entradas expiran entre `interval` y `2*interval` tras crearse
+- ✅ **Limpieza graceful**: `defer ticker.Stop()` al salir (goroutine infinita)
 - ✅ **Memory leak prevention**: map no crece indefinidamente
 
 ---
 
 ## 4. Integración en `fetchAndDisplay`
 
-### 4.1 Código Real (`internal/commands/commands_functions.go`)
+### 4.1 Código Real (`internal/commands/pagination_handler.go`)
 
 ```go
 // Variable global — UNA sola instancia para toda la app
-var cache = pokecache.NewCache(5 * time.Second)
+var cache = pokecache.NewCache(15 * time.Second)
 
 func fetchAndDisplay(url string) error {
     // 1️⃣ INTENTO DE CACHE HIT
     if val, ok := cache.Get(url); ok {
-        fmt.Println("(cache hit)")           // Feedback visual
+        fmt.Println("Data fetched from cache:")    // Feedback visual
         var result model.LocationArea
-        if err := json.Unmarshal(val, &result); err != nil {
-            return err
-        }
+        json.Unmarshal(val, &result)
+
+        updatePagination(result)
         return displayResult(result)
     }
 
@@ -254,14 +253,15 @@ func fetchAndDisplay(url string) error {
     c := client.NewClient(url)
     result, err := c.GetLocationArea(url)
     if err != nil {
-        return fmt.Errorf("failed to get location area: %w", err)
+        return fmt.Errorf("failed to fetch data: %w", err)
     }
 
     // 3️⃣ GUARDAR EN CACHE
     respBytes, _ := json.Marshal(result)
     cache.Add(url, respBytes)
 
-    return displayResult(result)
+    updatePagination(*result)
+    return displayResult(*result)
 }
 ```
 
@@ -354,19 +354,20 @@ mu sync.RWMutex
 
 ## 6. Configuración y Parámetros
 
-### 6.1 Intervalo Recomendado
+### 6.1 Intervalo Usado
 
 ```go
-var cache = pokecache.NewCache(5 * time.Second)
+// En pagination_handler.go
+var cache = pokecache.NewCache(15 * time.Second)
 ```
 
 | Intervalo | Pros | Contras |
 |-----------|------|---------|
-| **1-5s** (actual) | Datos frescos, poca memoria | Más requests a API |
+| **15s** (actual) | Datos frescos, poca memoria | Más requests a API |
 | **30-60s** | Menos requests | Datos stale, más memoria |
 | **∞** (sin reap) | Máximo hit rate | **Memory leak** |
 
-**5 segundos** es el sweet spot para CLI interactivo: el usuario navega `map` → `mapb` en <5s typical.
+**15 segundos** es el sweet spot para CLI interactivo: el usuario navega `map` → `mapb` en <15s typical.
 
 ---
 
@@ -384,33 +385,7 @@ cache.Get("https://pokeapi.co/api/v2/location-area/?offset=20&limit=20")
 
 ---
 
-## 7. Métricas y Observabilidad
-
-### 7.1 Logging Actual
-
-```go
-if val, ok := cache.Get(url); ok {
-    fmt.Println("(cache hit)")     // ← Único feedback
-    ...
-}
-```
-
-### 7.2 Métricas Sugeridas (Future Work)
-
-```go
-type Cache struct {
-    ...
-    hits   int64  // atomic
-    misses int64  // atomic
-    evictions int64
-}
-```
-
-Exponibles vía `expvar` o `/debug/vars` para monitoring.
-
----
-
-## 8. Limitaciones Conocidas
+## 7. Limitaciones Conocidas
 
 | Limitación | Impacto | Mitigación |
 |------------|---------|------------|
@@ -421,11 +396,11 @@ Exponibles vía `expvar` o `/debug/vars` para monitoring.
 
 ---
 
-## 9. Testing — Cobertura
+## 8. Testing — Cobertura
 
 | Test | Qué Verifica |
 |------|--------------|
-| `TestCacheAddGet` | Round-trip básico (3 casos) |
+| `TestCacheAddGet` | Round-trip básico (3 casos table-driven) |
 | `TestCacheGetMissing` | Key inexistente → `(nil, false)` |
 | `TestCacheOverwrite` | Segunda `Add` reemplaza valor |
 | `TestCacheReapLoop` | Entradas viejas expiran, nuevas persisten |
@@ -439,7 +414,7 @@ go test -race ./internal/pokecache/...  # Detección de races
 
 ---
 
-## 10. Referencia Rápida — API Pública
+## 9. Referencia Rápida — API Pública
 
 ```go
 package pokecache
@@ -448,7 +423,7 @@ package pokecache
 type Cache struct { ... }
 
 // NewCache — crea cache con intervalo de limpieza
-// Lanza reapLoop() en background
+// Lanza reapLoop(interval) en background
 func NewCache(interval time.Duration) *Cache
 
 // Add — guarda valor con timestamp actual
@@ -461,22 +436,22 @@ func (c *Cache) Get(key string) ([]byte, bool)
 
 // reapLoop — interno, corre cada interval
 // Elimina entries donde now - createdAt > interval
-func (c *Cache) reapLoop()
+func (c *Cache) reapLoop(interval time.Duration)
 ```
 
 ---
 
-## 11. Archivos Relacionados
+## 10. Archivos Relacionados
 
 | Archivo | Responsabilidad |
 |---------|-----------------|
 | `internal/pokecache/cache.go` | Structs + `NewCache` + `Add` + `Get` |
 | `internal/pokecache/cache_handler.go` | `reapLoop` |
 | `internal/pokecache/cache_test.go` | Tests table-driven + concurrent |
-| `internal/commands/commands_functions.go` | Integración en `fetchAndDisplay` |
+| `internal/commands/pagination_handler.go` | Integración en `fetchAndDisplay` |
 
 ---
 
 **Última actualización:** 24 Julio 2026  
-**Versión:** 1.0  
+**Versión:** 1.1  
 **Autor:** Nicolas Ferreras
