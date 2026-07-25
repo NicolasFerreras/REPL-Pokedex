@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/NicolasFerreras/REPL-Pokedex/internal/client"
 	"github.com/NicolasFerreras/REPL-Pokedex/internal/model"
 )
 
@@ -52,31 +51,4 @@ func CommandMapBack() error {
 		return nil
 	}
 	return fetchAndDisplay(*model.ConfigData.PreviousURL)
-}
-
-func fetchAndDisplay(url string) error {
-	c := client.NewClient(url)
-	result, err := c.GetLocationArea(url)
-	if err != nil {
-		return fmt.Errorf("failed to get location area: %w", err)
-	}
-
-	// Actualizar paginación
-	if result.Next != "" {
-		model.ConfigData.NextURL = &result.Next
-	} else {
-		model.ConfigData.NextURL = nil
-	}
-
-	if result.Previous != "" {
-		model.ConfigData.PreviousURL = &result.Previous
-	} else {
-		model.ConfigData.PreviousURL = nil
-	}
-
-	fmt.Println("Location Areas:")
-	for _, r := range result.Results {
-		fmt.Printf("- %s\n", r.Name)
-	}
-	return nil
 }
