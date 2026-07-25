@@ -27,7 +27,11 @@ func main() {
 		if len(cleanedInput) == 0 {
 			continue
 		}
-		if cleanedInput[0] == "explore" && len(cleanedInput) > 1 {
+		if cleanedInput[0] == "explore" {
+			if len(cleanedInput) < 2 {
+				fmt.Println(fmt.Errorf(errs.ErrCommandNeedsArg, "explore"))
+				continue
+			}
 			model.ConfigData.Arg = cleanedInput[1]
 		}
 
