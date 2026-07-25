@@ -449,5 +449,5 @@ func (c *Cache) reapLoop(interval time.Duration)
 ---
 
 **Última actualización:** 24 Julio 2026  
-**Versión:** 2.0 (corregida para coincidir con implementación real)  
+**Versión:** 1.0 
 **Autor:** Nicolas Ferreras
