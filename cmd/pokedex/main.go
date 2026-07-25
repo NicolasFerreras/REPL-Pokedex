@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 
+	errs "github.com/NicolasFerreras/REPL-Pokedex/internal/errors"
 	"github.com/NicolasFerreras/REPL-Pokedex/internal/commands"
 	"github.com/NicolasFerreras/REPL-Pokedex/internal/model"
 	"github.com/NicolasFerreras/REPL-Pokedex/internal/repl"
@@ -39,7 +40,7 @@ func main() {
 		}
 
 		if err := scanner.Err(); err != nil {
-			fmt.Println(err)
+			fmt.Println(fmt.Errorf(errs.ErrScannerIO, err))
 		}
 	}
 }
