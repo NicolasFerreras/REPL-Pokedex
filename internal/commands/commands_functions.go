@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 
+	errs "github.com/NicolasFerreras/REPL-Pokedex/internal/errors"
 	"github.com/NicolasFerreras/REPL-Pokedex/internal/model"
 )
 
@@ -27,12 +28,12 @@ func CommandHelp() error {
 // UserInput processes user input and executes the corresponding command
 func UserInput(input string) error {
 	if len(input) == 0 {
-		return fmt.Errorf("no command entered. Please enter a command")
+		return fmt.Errorf(errs.ErrNoCommandEntered)
 	}
 
 	cmd, exists := GetCommands()[input]
 	if !exists {
-		return fmt.Errorf("unknown command: %s. Type 'help' for available commands", input)
+		return fmt.Errorf(errs.ErrUnknownCommand, input)
 	}
 
 	return cmd.Callback()
