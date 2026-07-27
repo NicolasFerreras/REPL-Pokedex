@@ -20,6 +20,7 @@ func catchPokemon(url, pokemonName string) error {
 			return nil
 		}
 	}
+	fmt.Printf("Throwing a Pokeball at %s...\n", pokemonName)
 
 	if data, found := cache.Get(url); found {
 		fmt.Println("Data fetched from cache:")
