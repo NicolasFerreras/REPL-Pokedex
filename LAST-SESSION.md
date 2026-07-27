@@ -1,57 +1,55 @@
-# 📋 Última Sesión — 24 de Julio 2026
+# 📋 Última Sesión — 25 de Julio 2026
 
 ## 🎯 Resumen
-Se implementó un sistema de caché en memoria thread-safe para la PokéAPI con expiración automática (TTL). Se completó la integración completa con los comandos `map` y `mapb`, se escribió documentación exhaustiva y se cubrió con tests table-driven.
+Implementación del comando `explore` para explorar Pokémon en un área de ubicación específica, integración de caché, sistema de error handling centralizado, y corrección de bugs menores.
 
 ## ✅ Completado
-- **Paquete `internal/pokecache`**: Caché en memoria con `map[string]cacheEntry` + `sync.Mutex`
-  - `NewCache(interval)` — crea cache y lanza `reapLoop` en goroutine
-  - `Add(key, val)` — guarda `[]byte` con timestamp actual
-  - `Get(key)` — retorna `([]byte, bool)` con unlock antes de return
-  - `reapLoop(interval)` — limpieza automática con `time.Ticker`
-- **Integración en `pagination_handler.go`**:
-  - Variable global `cache = pokecache.NewCache(15 * time.Second)`
-  - `fetchAndDisplay(url)` usa `cache.Get/Add` — cache hit = instantáneo
-  - `updatePagination(result)` actualiza `NextURL`/`PreviousURL`
-- **Tests** (`cache_test.go`): 5 tests table-driven estilo `repl_test.go`
-  - `TestCacheAddGet` (3 casos), `TestCacheGetMissing`, `TestCacheOverwrite`, `TestCacheReapLoop`, `TestCacheConcurrentAccess` (200 goroutines, `-race` pass)
-- **Documentación**:
-  - `Cache-Docs.md` — 450+ líneas: arquitectura, structs, ciclo de vida, diagramas ASCII, concurrencia, configuración, testing, API pública
-  - `README.md` — Sección "Cache System" con link a `Cache-Docs.md`
-- **Git hygiene**:
-  - `.gitignore`: ignora `*.log` y `*.md` (except `README.md` y `Cache-Docs.md`)
-  - Commits atómicos: cache impl, integración, docs, gitignore
-  - Branch `feat/pokecache` mergeada a `main` (fast-forward) y eliminada
+- **Comando `explore` implementado** (sin cache inicial, luego con cache)
+  - `CommandExplore()` usa `model.ConfigData.Arg` como argumento de área
+  - Llama a `exploreCache(url)` que primero consulta la caché y luego la PokéAPI
+  - Registrado en `internal/commands/commands.go`
+- **`internal/commands/explore_cache_handler.go`** creado
+  - `exploreCache(url)` — check cache → fetch API → store cache → display results
+  - `displayResultPokemon(result)` — imprime lista de nombres de Pokémon encontrados
+- **Caché integrada** en `explore` (reutilizando `pokecache` existente, mismo patrón que `map`/`mapb`)
+- **Sistema de error handling centralizado** (`internal/errors/errors.go`)
+  - Constantes para todos los mensajes de error del sistema
+  - Constantes de HTTP status codes + helper `UserMessage(code int) string`
+  - Refactorizado en `commands_functions.go`, `client.go`, `main.go`, `explore_cache_handler.go`
+- **Bug fix**: `explore` sin argumento ahora muestra error en vez de consulta vacía
+- **Bug fix**: 404 ahora muestra mensaje amigable ("resource not found") en vez de código crudo
+- **Bug fix**: `json.Unmarshal` error en exploreCache ahora se verifica (antes se ignoraba)
 
 ## 🔄 En Progreso
-- (Nada — todo completado)
+- Tests específicos para `exploreCache` (test file eliminado al duplicar `cache_test.go`)
+- Actualización del README.md para incluir `explore` en la tabla de comandos
+- Actualización de Cache-Docs.md para documentar uso de caché en `explore`
 
 ## 📝 Próximos Pasos
-- Implementar comando `explore` (ver Pokémon en un área)
 - Implementar comando `catch` (atrapar Pokémon)
 - Implementar comando `inspect` (ver detalles de Pokémon atrapados)
 - Implementar comando `pokedex` (listar Pokémon atrapados)
-- CI/CD pipeline (GitHub Actions)
-- Tests para cliente HTTP (`internal/client`)
+- CI/CD (GitHub Actions)
+- Tests para `internal/client` (mock server)
+- Crear tests para `exploreCache` sin duplicar `cache_test.go` existentes
 
 ## 🔧 Contexto Técnico
-- **Caché agnóstico**: guarda `[]byte` (JSON crudo) — desacoplado de `model.LocationArea`
-- **Thread-safe**: `sync.Mutex` protege todo acceso al map (incluido `reapLoop`)
-- **TTL configurable**: 15 segundos en `pagination_handler.go`, pasado como parámetro a `reapLoop`
-- **Clave de cache**: URL completa con query params (`/location-area/?offset=20`)
-- **Estructura**: `cacheEntry{ createdAt time.Time, val []byte }` — sin `interval` en struct
-- **Tests**: `go test -race ./internal/pokecache/...` — PASS
+- `CommandExplore()` usa caché global compartido desde `pagination_handler.go` (`var cache = pokecache.NewCache(15 * time.Second)`)
+- Patrón de acceso a caché idéntico al de `fetchAndDisplay()`: `cache.Get(url)` → miss → `client.GetPokemon(url)` → `cache.Add(url, response)`
+- Argumento de área se pasa vía `model.ConfigData.Arg` y se concatena a `BaseURL`
+- Modelos de respuesta: `PokemonEncountersList` con campo `PokemonEncounters []PokemonEncounter`
+- Errores manejados con constantes de `internal/errors` (`ErrFetchData`, `ErrUnmarshalData`, `ErrMarshalData`, `ErrMakeRequest`, etc.)
+- HTTP status helpers: `StatusBadRequest=400`, `StatusNotFound=404`, `StatusTooManyRequests=429`, `StatusInternalError=500`, etc.
 
 ## 📊 Estado del Código
-- **Último commit en main**: `909a92f` — merge de `feat/pokecache` (fast-forward)
-- **Archivos clave añadidos**:
-  - `internal/pokecache/cache.go`
-  - `internal/pokecache/cache_handler.go`
-  - `internal/pokecache/cache_test.go`
-  - `internal/commands/pagination_handler.go`
-  - `Cache-Docs.md`
-- **Archivos modificados**:
-  - `.gitignore`
-  - `README.md`
-  - `internal/commands/commands_functions.go` (removida lógica duplicada)
-- **Tests**: `ok  internal/pokecache  0.858s` (cached) / `ok  internal/commands`
+- Últimos commits (branch `main`):
+  - `merge: feat/error-handling into main`
+  - `feat(errors): add centralized error constants and HTTP status helpers`
+  - `refactor(commands): use error constants from internal/errors`
+  - `refactor(client): use error constants from internal/errors`
+  - `refactor(main): use error constants from internal/errors for scanner error`
+  - `fix(main): validate explore requires a location argument`
+  - `fix(client): use user-friendly error messages for non-200 HTTP responses`
+  - `fix(commands): use error constants and handle Unmarshal error in exploreCache`
+- Archivos clave modificados: `commands.go`, `commands_functions.go`, `client.go`, `main.go`, `explore_cache_handler.go`, `errors.go`
+- Archivos clave nuevos: `internal/errors/errors.go`, `internal/commands/explore_cache_handler.go`, `internal/model/pokemon_encounters.go`

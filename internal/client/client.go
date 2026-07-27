@@ -44,7 +44,7 @@ func (c *Client) GetLocationArea(url string) (*model.LocationArea, error) {
 	return &locationArea, nil
 }
 
-func (c *Client) GetPokemon(url string) (*model.PokemonEncountersList, error) {
+func (c *Client) GetPokemonEncounters(url string) (*model.PokemonEncountersList, error) {
 	resp, err := c.HTTPClient.Get(url)
 	if err != nil {
 		return nil, fmt.Errorf(errors.ErrMakeRequest, err)
@@ -62,4 +62,24 @@ func (c *Client) GetPokemon(url string) (*model.PokemonEncountersList, error) {
 	}
 
 	return &pokemonEncounters, nil
+}
+
+func (c *Client) GetPokemon(url string) (*model.PokemonDetails, error) {
+	resp, err := c.HTTPClient.Get(url)
+	if err != nil {
+		return nil, fmt.Errorf(errors.ErrMakeRequest, err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("api error: %s", errors.UserMessage(resp.StatusCode))
+	}
+
+	var pokemon model.PokemonDetails
+	err = json.NewDecoder(resp.Body).Decode(&pokemon)
+	if err != nil {
+		return nil, fmt.Errorf(errors.ErrDecodeResponseBody, err)
+	}
+
+	return &pokemon, nil
 }
