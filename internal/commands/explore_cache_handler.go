@@ -24,7 +24,7 @@ func exploreCache(url string) error {
 
 	// If not in cache, fetch from API
 	c := client.NewClient(url)
-	result, err := c.GetPokemon(url)
+	result, err := c.GetPokemonEncounters(url)
 	if err != nil {
 		return fmt.Errorf(errors.ErrFetchData, err)
 	}

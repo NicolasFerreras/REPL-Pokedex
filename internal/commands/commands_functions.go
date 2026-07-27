@@ -60,3 +60,10 @@ func CommandExplore() error {
 
 	return exploreCache(url)
 }
+
+func CommandCatch() error {
+	arg := model.ConfigData.Arg
+	url := model.ConfigData.PokemonURL + arg
+
+	return catchPokemon(url, arg)
+}

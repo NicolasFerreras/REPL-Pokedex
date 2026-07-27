@@ -7,9 +7,9 @@ import "fmt"
 
 const (
 	// Command errors
-	ErrNoCommandEntered   = "no command entered. Please enter a command"
-	ErrUnknownCommand     = "unknown command: %s. Type 'help' for available commands"
-	ErrCommandNeedsArg    = "command %s requires an argument"
+	ErrNoCommandEntered = "no command entered. Please enter a command"
+	ErrUnknownCommand   = "unknown command: %s. Type 'help' for available commands"
+	ErrCommandNeedsArg  = "command %s requires an argument"
 
 	// Data fetching errors
 	ErrFetchData          = "failed to fetch data: %w"
@@ -18,6 +18,7 @@ const (
 	ErrDecodeResponseBody = "failed to decode response body: %w"
 	ErrMakeRequest        = "failed to make GET request: %w"
 	ErrNon200Response     = "received non-200 response code: %d"
+	ErrGetBaseExperience  = "failed to get base experience: %w"
 
 	// Cache errors
 	ErrCacheAdd = "failed to add item to cache"
