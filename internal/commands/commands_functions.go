@@ -6,6 +6,7 @@ import (
 
 	errs "github.com/NicolasFerreras/REPL-Pokedex/internal/errors"
 	"github.com/NicolasFerreras/REPL-Pokedex/internal/model"
+	pokemonVault "github.com/NicolasFerreras/REPL-Pokedex/internal/pokemonVault"
 )
 
 // ErrExit is a sentinel error used to signal the REPL should exit
@@ -66,4 +67,15 @@ func CommandCatch() error {
 	url := model.ConfigData.PokemonURL + arg
 
 	return catchPokemon(url, arg)
+}
+
+func CommandInspect() error {
+	arg := model.ConfigData.Arg
+	pokemon := pokemonVault.DefaultPokemonVault.GetPokemonDetails(arg)
+
+	if pokemon.PokemonName == "" {
+		return fmt.Errorf(errs.ErrPokemonNotCaught, arg)
+	}
+	fmt.Print(pokemonVault.DefaultPokemonVault.DisplayPokemonDetails(pokemon))
+	return nil
 }
