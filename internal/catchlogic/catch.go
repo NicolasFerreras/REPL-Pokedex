@@ -13,7 +13,7 @@ func Catch(pokemon model.PokemonDetails) string {
 	if !possiblyCatchPokemon(baseExperience) {
 		return fmt.Sprintf("%s escaped!", pokemon.Name)
 	}
-	pokemonVault.DefaultPokemonVault.AddPokemon(pokemon.Name)
+	pokemonVault.DefaultPokemonVault.AddPokemon(pokemon)
 	return fmt.Sprintf("%s was caught!", pokemon.Name)
 }
 

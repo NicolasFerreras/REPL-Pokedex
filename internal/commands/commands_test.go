@@ -25,10 +25,10 @@ func TestUserInput(t *testing.T) {
 			errMsg:  "unknown command: poke",
 		},
 		{
-			name:    "another invalid command",
-			input:   "catch",
+			name:    "unknown command returns error",
+			input:   "poke",
 			wantErr: true,
-			errMsg:  "unknown command: catch",
+			errMsg:  "unknown command: poke",
 		},
 		{
 			name:    "help command succeeds",

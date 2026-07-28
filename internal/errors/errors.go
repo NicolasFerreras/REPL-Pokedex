@@ -19,6 +19,7 @@ const (
 	ErrMakeRequest        = "failed to make GET request: %w"
 	ErrNon200Response     = "received non-200 response code: %d"
 	ErrGetBaseExperience  = "failed to get base experience: %w"
+	ErrPokemonNotCaught = "you haven't caught %s yet"
 
 	// Cache errors
 	ErrCacheAdd = "failed to add item to cache"
