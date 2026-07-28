@@ -169,14 +169,25 @@ Inventario en memoria de los Pokémon capturados durante la sesión:
 
 ## Lógica de captura
 
-La probabilidad de captura se basa en el `baseExperience` del Pokémon:
+La lógica está implementada en `internal/catchlogic/catch.go`:
 
+```go
+func possiblyCatchPokemon(baseExperience int) bool {
+    if baseExperience <= 0 {
+        baseExperience = 1 // mínimo para dar alguna chance de captura
+    }
+    maxCaptureChance := baseExperience + 50
+    captureChance := rand.Intn(maxCaptureChance)
+    // Random number between 0 and maxCaptureChance
+    return captureChance >= baseExperience
+}
 ```
-probabilidad = baseExperience / (baseExperience + 50)
-```
+
+Se toma la `baseExperience` del Pokémon y se le suma 50, obteniendo `maxCaptureChance`. Se genera un número aleatorio entre 0 y `maxCaptureChance`. Si el número generado es **mayor o igual** a `baseExperience`, el Pokémon se captura. Si es menor, escapa.
 
 - `baseExperience = 0` → se usa mínimo de 1 (nunca 0% de chance)
-- Mayor `baseExperience` → mayor probabilidad de captura
+- Mayor `baseExperience` → mayor umbral de captura → menos probable captura
+- Menor `baseExperience` → menor umbral de captura → más probable captura
 
 ## Stack
 

@@ -501,14 +501,24 @@ type PokemonVault struct {
 
 ## 13. Lógica de Captura
 
-Probabilidad basada en `base_experience` del Pokémon:
+Implementada en `internal/catchlogic/catch.go`:
 
+```go
+func possiblyCatchPokemon(baseExperience int) bool {
+    if baseExperience <= 0 {
+        baseExperience = 1 // mínimo para dar alguna chance de captura
+    }
+    maxCaptureChance := baseExperience + 50
+    captureChance := rand.Intn(maxCaptureChance)
+    // Random number between 0 and maxCaptureChance
+    return captureChance >= baseExperience
+}
 ```
-probabilidad_captura = baseExperience / (baseExperience + 50)
-```
+
+Se toma la `baseExperience` del Pokémon y se le suma 50, obteniendo `maxCaptureChance`. Se genera un número aleatorio entre 0 y `maxCaptureChance`. Si el número generado es **mayor o igual** a `baseExperience`, el Pokémon se captura. Si es menor, escapa.
 
 - `baseExperience ≤ 0` → mínimo forzado a `1` (nunca 0% de chance)
-- `baseExperience = 60` → 60/110 ≈ 55%
-- `baseExperience = 200` → 200/250 = 80%
+- Mayor `baseExperience` → mayor umbral de captura → menos probable captura
+- Menor `baseExperience` → menor umbral de captura → más probable captura
 
 Función clave: `possiblyCatchPokemon(baseExperience int) bool` en `internal/catchlogic/catch.go`.
