@@ -188,6 +188,8 @@ probabilidad = baseExperience / (baseExperience + 50)
 | **HTTP** | `net/http` (stdlib) |
 | **Tests** | Table-driven tests |
 | **Caché** | In-memory, thread-safe, TTL |
+| **OS** | Linux |
+| **Herramientas** | Postman (testing de endpoints de PokéAPI) |
 
 ## Error handling
 
