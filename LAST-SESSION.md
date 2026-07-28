@@ -26,12 +26,15 @@ Implementación del comando `explore` para explorar Pokémon en un área de ubic
 - Actualización de Cache-Docs.md para documentar uso de caché en `explore`
 
 ## 📝 Próximos Pasos
-- Implementar comando `catch` (atrapar Pokémon)
-- Implementar comando `inspect` (ver detalles de Pokémon atrapados)
-- Implementar comando `pokedex` (listar Pokémon atrapados)
 - CI/CD (GitHub Actions)
 - Tests para `internal/client` (mock server)
-- Crear tests para `exploreCache` sin duplicar `cache_test.go` existentes
+- Crear tests para `catchCache` / `catchlogic` sin duplicar existentes
+
+## 📋 Backlog (Próximos Features)
+- 🔴 | inspect — Ver detalles de un Pokémon capturado (nombre, tipo, stats, etc.)
+- 🟠 | pokedex — Listar todos los Pokémon atrapados
+- 🟡 | Actualizar README.md con tabla de comandos actualizada
+- 🟡 | Actualizar Cache-Docs.md con sección de catch y vault
 
 ## 🔧 Contexto Técnico
 - `CommandExplore()` usa caché global compartido desde `pagination_handler.go` (`var cache = pokecache.NewCache(15 * time.Second)`)
