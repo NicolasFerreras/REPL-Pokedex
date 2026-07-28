@@ -79,3 +79,16 @@ func CommandInspect() error {
 	fmt.Print(pokemonVault.DefaultPokemonVault.DisplayPokemonDetails(pokemon))
 	return nil
 }
+
+func CommandPokedex() error {
+	caughtPokemons := pokemonVault.DefaultPokemonVault.GetPokemonCaught()
+	if len(caughtPokemons) == 0 {
+		fmt.Println("You haven't caught any Pokémon yet.")
+		return nil
+	}
+	fmt.Println("Your Pokedex:")
+	for _, name := range pokemonVault.DefaultPokemonVault.GetPokemonCaught() {
+		fmt.Printf("- %s\n", name)
+	}
+	return nil
+}
