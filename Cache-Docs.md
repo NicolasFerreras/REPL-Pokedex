@@ -448,6 +448,67 @@ func (c *Cache) reapLoop(interval time.Duration)
 
 ---
 
-**Última actualización:** 24 Julio 2026  
-**Versión:** 1.0 
-**Autor:** Nicolas Ferreras
+## 11. Caché en `catch` (Pokémon)
+
+El comando `catch` reutiliza la misma caché global compartida desde `pagination_handler.go` (`var cache = pokecache.NewCache(15 * time.Second)`), con el mismo patrón que `fetchAndDisplay`:
+
+```
+catchPokemon(url, name)
+  ├─ 1️⃣  Vault check: ¿ya fue capturado? → "has already been caught!"
+  ├─ 2️⃣  cache.Get(url) → HIT: usar datos almacenados
+  ├─ 3️⃣  cache.Get(url) → MISS: HTTP GET → cache.Add(url, jsonBytes)
+  └─ 4️⃣  catchlogic.Catch(pokemonDetails) → probabilidad de captura
+```
+
+**Diferencia con otros comandos:** Antes de consultar el cache o hacer el fetch, el vault se verifica primero. Si el Pokémon ya fue capturado, no se hace request HTTP ni se accede al cache.
+
+### Invalidación de caché en catch
+
+Cuando `Catch()` retorna `"was caught"`, la entrada del cache del Pokémon se elimina automáticamente para mantener coherencia:
+
+```go
+cache.Delete(url)  // Invalidar caché del Pokémon recién capturado
+```
+
+---
+
+## 12. PokemonVault — Inventario
+
+El vault (`internal/pokemonVault/`) almacena los datos completos de los Pokémon capturados:
+
+| Método | Retorna | Descripción |
+|--------|---------|-------------|
+| `AddPokemon(details)` | — | Registra un Pokémon con todos sus datos |
+| `GetPokemonCaught()` | `[]string` | Lista de nombres capturados |
+| `GetPokemonDetails(name)` | `PokemonVault` | Datos completos por nombre |
+| `DisplayPokemonDetails(pokemon)` | `string` | String formateado con stats, tipos, height, weight |
+
+**Estructuras:**
+```go
+type PokemonVault struct {
+    PokemonName   string
+    PokemonHeight int
+    PokemonWeight int
+    PokemonStats  []PokemonStat  // HP, Attack, Defense, Sp.Atk, Sp.Def, Speed
+    PokemonTypes  []PokemonType  // Tipos (electric, water, fire...)
+    HasBeenCaught bool
+}
+```
+
+**Instancia global:** `DefaultPokemonVault PokemonVaultMethods` — accesible desde cualquier comando vía `pokemonVault.DefaultPokemonVault`.
+
+---
+
+## 13. Lógica de Captura
+
+Probabilidad basada en `base_experience` del Pokémon:
+
+```
+probabilidad_captura = baseExperience / (baseExperience + 50)
+```
+
+- `baseExperience ≤ 0` → mínimo forzado a `1` (nunca 0% de chance)
+- `baseExperience = 60` → 60/110 ≈ 55%
+- `baseExperience = 200` → 200/250 = 80%
+
+Función clave: `possiblyCatchPokemon(baseExperience int) bool` en `internal/catchlogic/catch.go`.
