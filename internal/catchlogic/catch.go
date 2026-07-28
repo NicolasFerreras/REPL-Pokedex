@@ -24,5 +24,5 @@ func possiblyCatchPokemon(baseExperience int) bool {
 	maxCaptureChance := baseExperience + 50
 	captureChance := rand.Intn(maxCaptureChance)
 	// Random number between 0 and maxCaptureChance
-	return captureChance < baseExperience
+	return captureChance >= baseExperience
 }
